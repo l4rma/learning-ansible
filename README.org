@@ -1,7 +1,9 @@
 #+title: Readme
 * Introduction
 My notes from following the tutorial by LearnLinuxTV
+
 Course source: https://www.youtube.com/watch?v=3RiVKs8GHYQ&t=87s
+
 ** What is Ansible
 Automation for setting up computers/servers.
 ** What we will learn:
@@ -132,3 +134,5 @@ Content of "install_apache.yml"
 #+begin_src shell
 ansible-playbook --ask-become-pass install_apache.yml
 #+end_src
+
+* The 'when' conditional
