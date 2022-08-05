@@ -136,3 +136,28 @@ ansible-playbook --ask-become-pass install_apache.yml
 #+end_src
 
 * The 'when' conditional
+** Adding distro condition
+They keyword 'when' can be used to set a condition for when to run a task
+#+begin_src shell
+# ...
+- name: updage repository index
+  apt:
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+# ...
+#+end_src
+
+To see more variables to use as a when conditional run gather facts
+#+begin_src shell
+# Get facts, these can be used in the when condition
+ansible all -m gather_facts --limit <ip-address>
+#+end_src
+
+** Start httpd on CentOS
+Apache2, or httpd as its called on CentOS does not run by default. Service must be started manually. This will ofc later be done by ansible..
+#+begin_src shell
+# Start the httpd service
+sudo systemctl start httpd
+# Add firewall rule to open port 80
+sudo firewall-cmd --add-port=80/tcp
+#+end_src
