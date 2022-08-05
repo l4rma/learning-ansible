@@ -1,0 +1,134 @@
+#+title: Readme
+* Introduction
+My notes from following the tutorial by LearnLinuxTV
+Course source: https://www.youtube.com/watch?v=3RiVKs8GHYQ&t=87s
+** What is Ansible
+Automation for setting up computers/servers.
+** What we will learn:
+We'll learn how to set up ansible and install packages and create users and roles on an arbitrary set of servers.
+* SSH Overview and setup
+** SSH:
+- Secure SHell. Make sure OpenSSH is installed on the workstation AND servers.
+- Connect to each server from the workstation. Andswer "yes" to initial connection prompt.
+- Create SSH key pair (with passphrase) for your normal user account.
+- Copy that key to each server
+- Create an SSH key that is specific to ansible (To be able to do automation)
+- Copy that key to each server as well.
+
+** SSH into all servers from the workstation
+#+begin_src shell
+# Accept fingerprint, check that connection works before automation
+ssh 123.345.678.91
+ssh 123.345.678.92
+ssh 123.345.678.93
+#+end_src
+
+** Generate SSH-key
+#+begin_src shell
+ssh-keygen -t ed25519 -C "lars default"
+# -t: Type ed25519 (more secure than default)
+# -C: Comment
+# Add passphrase for better security
+
+# Key pair location
+ls -la ~/.ssh/
+
+# Create a keypair for ansible
+ssh-keygen -t ed25519 -C "ansible"
+# Use a new name: /$HOME/.ssh/<name>
+# Dont add passphrase
+#+end_src
+
+** Copy SSH-key
+#+begin_src shell
+ssh-copy-id -i ~/.ssh/id_ed25519.pub <ip-address>
+# -i: input file
+
+# Copy over the key for ansible
+ssh-copy-id -i ~/.ssh/ansible <ip-address>
+# It will ask for the passphrase from the "manual" key
+#+end_src
+
+** SSH with ansible key
+#+begin_src shell
+ssh -i ~/.ssh/ansible <ip-address>
+
+# Start ssh-agent in the background to cache keys
+eval $(ssh-agent)
+# Enter passphrase and the key passphrase is cached for the lifetime of the shell
+ssh-add
+# Create alias
+alias ssha='eval $(ssh-agent) && ssh-add'
+# Make it persistent
+echo "alias ssha='eval $(ssh-agent) && ssh-add'" >> path/to/alias-file
+#+end_src
+
+* Setting up a Git Repository
+* Running ad-hoc Commands
+Install Ansible from package manager
+** Create an Inventory
+Create an inventory file called "inventory" consisting of a list of the servers ip's
+** Run a command
+#+begin_src shell
+# Make a connection to all servers in the inventory file
+ansible all --key-file ~/.ssh/ansible -i ./inventory -m ping
+#+end_src
+
+** Create a Ansible config file
+Create a config file
+#+begin_src shell
+touch ansible.cfg
+#+end_src
+
+Content of "Ansible.cfg"
+#+begin_src shell
+[defaults]
+intentory = inventory
+private_key_file = ~/.ssh/ansible
+#+end_src
+
+* Running elevated ad-hoc commands
+** Run a command to update the package managers package index (debian)
+Run "sudo apt update" on all servers
+#+begin_src shell
+ansible all -m apt -a update_cache=true --become --ask-become-pass
+# -m: module, -a: argument
+# Become password = sudo password (of the server you're running the command on)
+#+end_src
+Ansible documentation: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html
+** Install/Upgrade packages
+#+begin_src shell
+# Install vim-nox
+ansible all -m apt -a name=vim-nox --become --ask-become-pass
+# Install tmux
+ansible all -m apt -a name=tmux --become --ask-become-pass
+# Update snapd
+ansible all -m apt -a "name=snapd state=latest" --become --ask-become-pass
+# Upgrade packages
+ansible all -m apt -a upgrade=dist --become --ask-become-pass
+#+end_src
+
+* Wrinting your first playbook
+** First playbook
+Create a playbook yml-file
+#+begin_src shell
+touch install_apache.yml
+#+end_src
+
+Content of "install_apache.yml"
+#+begin_src
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install apache2 package
+    apt:
+      name: apache2
+#+end_src
+
+** Run playbook
+#+begin_src shell
+ansible-playbook --ask-become-pass install_apache.yml
+#+end_src
