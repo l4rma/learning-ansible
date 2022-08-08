@@ -161,3 +161,14 @@ sudo systemctl start httpd
 # Add firewall rule to open port 80
 sudo firewall-cmd --add-port=80/tcp
 #+end_src
+
+* Improving the playbook
+** Install several packages in same play
+#+begin_src shell
+# ...
+apt:
+  name:
+    - apache2
+    - libapache2-mod-php
+# ...
+#+end_src
